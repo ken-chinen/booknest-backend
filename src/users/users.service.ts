@@ -1,16 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUsersDto } from './dtos/create-users.dto';
+import { CreateUsersDto } from '../dtos/user/create-users.dto';
 import { Users } from './users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UpdateUsersDto } from './dtos/update-users.dto';
+import { UpdateUsersDto } from '../dtos/user/update-users.dto';
+import { UsersLibrary } from 'src/users-library/users-library.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
+    @InjectRepository(UsersLibrary)
+    private readonly usersLibraryRepository: Repository<UsersLibrary>,
   ) {}
 
   async findAll(): Promise<Users[]> {
@@ -29,12 +32,22 @@ export class UsersService {
     const { password, libraryId, ...res } = createUsersDto;
     const passwordHash = await bcrypt.hash(password, 10);
 
+    //ユーザー作成
     const user = this.usersRepository.create({
       ...res,
       passwordHash,
-      library: libraryId ? ({ id: libraryId } as any) : undefined,
+      usersLibrary: libraryId ? ({ id: libraryId } as any) : undefined,
     });
     const savedUser = await this.usersRepository.save(user);
+
+    //UsersLibraryの作成
+    if (libraryId) {
+      const userLibrary = this.usersLibraryRepository.create({
+        user: savedUser,
+        library: { id: libraryId } as any,
+      });
+      await this.usersLibraryRepository.save(userLibrary);
+    }
     return savedUser;
   }
 

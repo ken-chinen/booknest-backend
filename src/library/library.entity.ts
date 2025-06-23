@@ -1,7 +1,9 @@
+import { UsersLibrary } from 'src/users-library/users-library.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,6 +21,9 @@ export class Library {
 
   @Column()
   phone: string;
+
+  @OneToMany(() => UsersLibrary, (ul) => ul.library)
+  usersLibrary: UsersLibrary[];
 
   @CreateDateColumn()
   createdAt: Date;

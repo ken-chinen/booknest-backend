@@ -1,21 +1,18 @@
-import { Library } from 'src/library/library.entity';
 import { UserRole } from 'src/library/users-enum';
+import { UsersLibrary } from 'src/users-library/users-library.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity()
+@Entity('users')
 export class Users {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @ManyToOne(() => Library, { nullable: true })
-  library: Library;
 
   @Column({ length: 100 })
   name: string;
@@ -31,6 +28,12 @@ export class Users {
     enum: UserRole,
   })
   role: UserRole;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @OneToMany(() => UsersLibrary, (ul) => ul.user)
+  usersLibrary: UsersLibrary[];
 
   @CreateDateColumn()
   createdAt: Date;
