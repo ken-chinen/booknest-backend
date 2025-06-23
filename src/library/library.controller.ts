@@ -9,8 +9,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { LibraryService } from './library.service';
-import { CreateLibraryDto } from './dtos/create-library.dto';
-import { UpdateLibraryDto } from './dtos/update-library.dto';
+import { CreateLibraryDto } from '../dtos/library/create-library.dto';
+import { UpdateLibraryDto } from '../dtos/library/update-library.dto';
 import { Library } from './library.entity';
 
 @Controller('library')

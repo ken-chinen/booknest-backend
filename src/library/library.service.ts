@@ -1,17 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Library } from './library.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateLibraryDto } from './dtos/create-library.dto';
-import { UpdateLibraryDto } from './dtos/update-library.dto';
+import { In, Repository } from 'typeorm';
+import { CreateLibraryDto } from '../dtos/library/create-library.dto';
+import { UpdateLibraryDto } from '../dtos/library/update-library.dto';
 import * as path from 'path';
 import * as fs from 'fs';
+import { Users } from 'src/users/users.entity';
+import { UsersLibrary } from 'src/users-library/users-library.entity';
 
 @Injectable()
 export class LibraryService {
   constructor(
     @InjectRepository(Library)
     private readonly libraryRepository: Repository<Library>,
+    @InjectRepository(UsersLibrary)
+    private readonly usersLibraryRepository: Repository<UsersLibrary>,
+    @InjectRepository(Users)
+    private readonly usersRepository: Repository<Users>,
   ) {}
 
   async bulkInsertFromJson(): Promise<string> {
@@ -39,7 +45,28 @@ export class LibraryService {
   }
 
   async create(createLibraryDto: CreateLibraryDto): Promise<Library> {
-    return this.libraryRepository.save(createLibraryDto);
+    const { userIds, ...libraryData } = createLibraryDto;
+
+    // 図書館エンティティの作成・保存
+    const library = this.libraryRepository.create(libraryData);
+    const savedLibrary = await this.libraryRepository.save(library);
+
+    //userIdsが存在する場合、中間テーブルにレコードを保存
+    if (userIds) {
+      const users = await this.usersRepository.find({
+        where: { id: In(userIds) },
+      });
+
+      const usersLibraryEntities = users.map((user) =>
+        this.usersLibraryRepository.create({
+          user,
+          library: savedLibrary,
+        }),
+      );
+      await this.usersLibraryRepository.save(usersLibraryEntities);
+    }
+
+    return savedLibrary;
   }
 
   async update(

@@ -5,6 +5,7 @@ import {
   Length,
   IsOptional,
   IsUUID,
+  IsBoolean,
 } from 'class-validator';
 import { UserRole } from 'src/library/users-enum';
 
@@ -27,4 +28,8 @@ export class CreateUsersDto {
 
   @IsEnum(UserRole)
   role: UserRole;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
